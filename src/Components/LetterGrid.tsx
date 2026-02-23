@@ -36,8 +36,7 @@ export default function LetterGrid() {
     const newGuesses = [...guesses, guess];
     setGuesses(newGuesses);
     setInput("");
-
-    if (guess === secret) {
+    if (guess === secret.toUpperCase()) {
       setWon(true);
       setGameOver(true);
     } else if (newGuesses.length >= 5) {
