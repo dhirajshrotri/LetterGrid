@@ -71,7 +71,7 @@ export default function LetterGrid() {
           fontWeight: 700,
         }}
       >
-        Wordle
+        Letter Grid
       </h1>
       <div
         style={{
