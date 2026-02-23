@@ -1,5 +1,5 @@
 import LetterGrid from './Components/LetterGrid'
-import { Analytics } from "@vercel/analytics/next"
+import { Analytics } from "@vercel/analytics/react"
 
 function App() {
   return (
