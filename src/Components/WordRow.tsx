@@ -1,4 +1,4 @@
-function getCharColor(guess, secret, index) {
+function getCharColor(guess: string, secret:string, index:number) {
   const g = guess[index].toUpperCase();
   const s = secret.toUpperCase();
   if (g === s[index]) return "#538d4e"; // green
@@ -6,7 +6,13 @@ function getCharColor(guess, secret, index) {
   return "#3a3a3c";                      // red/dark
 }
 
-export default function WordRow({ word, secret, isGuessed }) {
+interface WordRowProps {
+  word: string | null
+  secret: string
+  isGuessed: boolean
+}
+
+export default function WordRow({ word, secret, isGuessed }: Readonly<WordRowProps>) {
   return (
     <div style={{ display: "flex", gap: 6 }}>
       {Array.from({ length: 5 }).map((_, i) => {

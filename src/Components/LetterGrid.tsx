@@ -3,7 +3,7 @@ import WordRow from "./WordRow";
 
 export default function LetterGrid() {
   
-  const [secret, setSecret] = useState<null | string>(null);
+  const [secret, setSecret] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [guesses, setGuesses] = useState<string[]>([]); // array of 5-char strings
@@ -28,9 +28,9 @@ export default function LetterGrid() {
       });
   }, []);
 
-  function handleSubmit(e) {
+  function handleSubmit(e: { preventDefault: () => void; } ) {
     e.preventDefault();
-    if (!input || input.length !== 5 || gameOver || !secret) return;
+    if (input?.length !== 5 || gameOver || !secret) return;
 
     const guess = input.toUpperCase();
     const newGuesses = [...guesses, guess];
