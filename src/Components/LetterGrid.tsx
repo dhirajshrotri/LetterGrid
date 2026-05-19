@@ -1,11 +1,46 @@
 import { useEffect, useRef, useState } from "react";
 import WordRow from "./WordRow";
 
+const STORAGE_KEY = "letter-grid-session";
+
+function encodeSecret(secret: string) {
+  return btoa(
+    secret
+      .split("")
+      .map((char, index) =>
+        String.fromCodePoint((char.codePointAt(0) ?? 0) ^ (0x5a + index))
+      )
+      .join("")
+  );
+}
+
+function getEndGameMessage(guessCount: number, won: boolean) {
+  if (!won) {
+    return "Better luck next time — try again tomorrow.";
+  }
+
+  switch (guessCount) {
+    case 1:
+      return "One guess? That feels suspiciously fast... are you sure you didn't peek?";
+    case 2:
+      return "Two guesses? Maybe you got lucky. Nice work.";
+    case 3:
+      return "Three guesses is a strong show. Well played.";
+    case 4:
+      return "Four guesses is solid. That was a good solve.";
+    case 5:
+      return "Five guesses means you earned it. Great job.";
+    default:
+      return "You solved it! Nice finish.";
+  }
+}
+
 export default function LetterGrid() {
   
   const [secret, setSecret] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [guessError, setGuessError] = useState<string | null>(null);  const [wordSet, setWordSet] = useState<Set<string> | null>(null);
   const [guesses, setGuesses] = useState<string[]>([]); // array of 5-char strings
   const [input, setInput] = useState("");
   const [gameOver, setGameOver] = useState(false);
@@ -13,14 +48,49 @@ export default function LetterGrid() {
   const inputRef = useRef(null);
 
   useEffect(() => {
-    fetch("https://darkermango.github.io/5-Letter-words/words.json")
-      .then((r) => r.json())
+    fetch("https://raw.githubusercontent.com/charlesreid1/five-letter-words/refs/heads/main/sgb-words.txt")
+      .then((r) => r.text())
       .then((data) => {
-        const idx = Math.trunc(new Date().getTime() / (1000*60*60*24)); // day index
-        const dailyWord = data["words"][idx % data["words"].length];
-        
+        const dataArr = data
+          .split("\n")
+          .map((word) => word.trim().toUpperCase())
+          .filter(Boolean);
+
+        if (!dataArr.length) {
+          throw new Error("Word list is empty");
+        }
+
+        const idx = Math.trunc(Date.now() / (1000 * 60 * 60 * 24)); // day index
+        const dailyWord = dataArr[idx % dataArr.length];
+        const encodedDailyWord = encodeSecret(dailyWord);
+
         setSecret(dailyWord);
+        setWordSet(new Set(dataArr));
         setLoading(false);
+
+        try {
+          const saved = localStorage.getItem(STORAGE_KEY);
+          if (saved) {
+            const session = JSON.parse(saved) as {
+              secret: string;
+              guesses: string[];
+              input: string;
+              gameOver: boolean;
+              won: boolean;
+            };
+
+            if (session.secret === encodedDailyWord) {
+              setGuesses(session.guesses || []);
+              setInput(session.input || "");
+              setGameOver(session.gameOver || false);
+              setWon(session.won || false);
+            } else {
+              localStorage.removeItem(STORAGE_KEY);
+            }
+          }
+        } catch {
+          // ignore parse errors
+        }
       })
       .catch(() => {
         setError("Failed to load secret word. Please refresh.");
@@ -28,14 +98,27 @@ export default function LetterGrid() {
       });
   }, []);
 
-  function handleSubmit(e: { preventDefault: () => void; } ) {
+  function handleSubmit(e: { preventDefault: () => void }) {
     e.preventDefault();
-    if (input?.length !== 5 || gameOver || !secret) return;
+    if (input?.length !== 5 || gameOver || !secret || !wordSet) return;
 
     const guess = input.toUpperCase();
+
+    if (!wordSet.has(guess)) {
+      setGuessError("We got shakespeare in the house? That's not a valid word.");
+      return;
+    }
+
+    if (guesses.includes(guess)) {
+      setGuessError("You've already guessed that word.");
+      return;
+    }
+
+    setGuessError(null);
     const newGuesses = [...guesses, guess];
     setGuesses(newGuesses);
     setInput("");
+
     if (guess === secret.toUpperCase()) {
       setWon(true);
       setGameOver(true);
@@ -49,12 +132,35 @@ export default function LetterGrid() {
     isGuessed: i < guesses.length,
   }));
 
+  useEffect(() => {
+    if (!secret) return;
+
+    const session = {
+      secret: encodeSecret(secret),
+      guesses,
+      input,
+      gameOver,
+      won,
+    };
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
+  }, [secret, guesses, input, gameOver, won]);
+
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "#121213",
-        display: "flex",
+    <>
+      <style>{`@keyframes shake {
+        0% { transform: translateX(0); }
+        20% { transform: translateX(-8px); }
+        40% { transform: translateX(8px); }
+        60% { transform: translateX(-6px); }
+        80% { transform: translateX(6px); }
+        100% { transform: translateX(0); }
+      }`}</style>
+      <div
+        style={{
+          minHeight: "100vh",
+          background: "#121213",
+          display: "flex",
         flexDirection: "column",
         alignItems: "center",
         paddingTop: 40,
@@ -96,7 +202,7 @@ export default function LetterGrid() {
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {rows.map((row, i) => (
               <WordRow
-                key={i}
+                key={row.word || i}
                 word={row.word}
                 secret={secret}
                 isGuessed={row.isGuessed}
@@ -125,6 +231,35 @@ export default function LetterGrid() {
                   </span>
                 </p>
               )}
+              <div
+                style={{
+                  marginTop: 24,
+                  padding: 20,
+                  border: "1px solid #3a3a3c",
+                  borderRadius: 12,
+                  background: "#181819",
+                  maxWidth: 320,
+                  marginLeft: "auto",
+                  marginRight: "auto",
+                }}
+              >
+                <p
+                  style={{
+                    color: "#ffffff",
+                    fontSize: 16,
+                    fontWeight: 700,
+                    marginBottom: 10,
+                  }}
+                >
+                  Game stats
+                </p>
+                <p style={{ color: "#818384", fontSize: 14, marginBottom: 8 }}>
+                  Total guesses: <span style={{ color: "#ffffff" }}>{guesses.length}</span>
+                </p>
+                <p style={{ color: "#abb0b6", fontSize: 14 }}>
+                  {getEndGameMessage(guesses.length, won)}
+                </p>
+              </div>
             </div>
           ) : (
             <form
@@ -134,9 +269,10 @@ export default function LetterGrid() {
               <input
                 ref={inputRef}
                 value={input}
-                onChange={(e) =>
-                  setInput(e.target.value.toUpperCase().slice(0, 5))
-                }
+                onChange={(e) => {
+                  setGuessError(null);
+                  setInput(e.target.value.toUpperCase().slice(0, 5));
+                }}
                 maxLength={5}
                 placeholder="GUESS"
                 autoFocus
@@ -153,6 +289,7 @@ export default function LetterGrid() {
                   textAlign: "center",
                   textTransform: "uppercase",
                   outline: "none",
+                  animation: guessError?.length ? "shake 0.35s ease" : undefined,
                 }}
               />
               <button
@@ -177,11 +314,18 @@ export default function LetterGrid() {
             </form>
           )}
 
+          {guessError && (
+            <p style={{ color: "#ff6b6b", marginTop: 12, fontSize: 14 }}>
+              {guessError}
+            </p>
+          )}
+
           <p style={{ color: "#818384", marginTop: 16, fontSize: 13 }}>
             Guesses: {guesses.length} / 5
           </p>
         </>
       )}
     </div>
+    </>
   )
 }
