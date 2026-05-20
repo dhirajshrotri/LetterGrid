@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import WordRow from "./WordRow";
 import { getTodayStats, recordResult } from "../Services/statsService";
 import StatsModal from "./StatsModal";
+import type { DocumentData } from "firebase/firestore";
 
 const STORAGE_KEY = "letter-grid-session";
 
@@ -48,7 +49,7 @@ export default function LetterGrid() {
   const [gameOver, setGameOver] = useState(false);
   const [won, setWon] = useState(false);
   const inputRef = useRef(null);
-  const [stats, setStats] = useState(null);
+  const [stats, setStats] = useState<DocumentData | null>(null);
   const [showStats, setShowStats] = useState(false);
   const [playerGuesses, setPlayerGuesses] = useState(0);
 

@@ -5,7 +5,7 @@ function getTodayKey() {
   return new Date().toISOString().slice(0, 10);
 }
 
-export async function recordResult(guessCount) {
+export async function recordResult(guessCount: number) {
   const today = getTodayKey();
 
   // prevent duplicate submissions

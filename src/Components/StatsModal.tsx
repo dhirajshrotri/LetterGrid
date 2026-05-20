@@ -1,4 +1,4 @@
-function getPercentile(guessDistribution, totalPlays, playerGuesses) {
+function getPercentile(guessDistribution: { [key: string]: number }, totalPlays: number, playerGuesses: number) {
   // Count how many players did WORSE (more guesses) than you
     let worseCount = 0;
     for (let g = playerGuesses + 1; g <= 6; g++) {
@@ -12,7 +12,16 @@ function getPercentile(guessDistribution, totalPlays, playerGuesses) {
     return percentile; // "top 20%" means percentile >= 80
   }
 
-function StatsModal({ stats, playerGuesses }) {
+
+interface StatsModalProps {
+  stats: {
+    plays: number;
+    guessDistribution: { [key: string]: number };
+  };
+  playerGuesses: number;
+}
+
+function StatsModal({ stats, playerGuesses }: Readonly<StatsModalProps>) {
   
   const percentile = getPercentile(
     stats.guessDistribution,
