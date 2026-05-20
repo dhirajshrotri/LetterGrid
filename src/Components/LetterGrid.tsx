@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import WordRow from "./WordRow";
+import { getTodayStats, recordResult } from "../Services/statsService";
+import StatsModal from "./StatsModal";
 
 const STORAGE_KEY = "letter-grid-session";
 
@@ -46,6 +48,9 @@ export default function LetterGrid() {
   const [gameOver, setGameOver] = useState(false);
   const [won, setWon] = useState(false);
   const inputRef = useRef(null);
+  const [stats, setStats] = useState(null);
+  const [showStats, setShowStats] = useState(false);
+  const [playerGuesses, setPlayerGuesses] = useState(0);
 
   useEffect(() => {
     fetch("https://raw.githubusercontent.com/charlesreid1/five-letter-words/refs/heads/main/sgb-words.txt")
@@ -98,7 +103,7 @@ export default function LetterGrid() {
       });
   }, []);
 
-  function handleSubmit(e: { preventDefault: () => void }) {
+  async function handleSubmit(e: { preventDefault: () => void }) {
     e.preventDefault();
     if (input?.length !== 5 || gameOver || !secret || !wordSet) return;
 
@@ -120,6 +125,11 @@ export default function LetterGrid() {
     setInput("");
 
     if (guess === secret.toUpperCase()) {
+      await recordResult(guesses.length + 1);
+      const stats = await getTodayStats();
+      setStats(stats);          // trigger your stats modal
+      setPlayerGuesses(guesses.length);
+      setShowStats(true);
       setWon(true);
       setGameOver(true);
     } else if (newGuesses.length >= 5) {
@@ -324,6 +334,10 @@ export default function LetterGrid() {
             Guesses: {guesses.length} / 5
           </p>
         </>
+      )}
+
+      {showStats && stats && (
+        <StatsModal stats={stats} playerGuesses={playerGuesses} />
       )}
     </div>
     </>
