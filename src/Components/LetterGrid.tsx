@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import WordRow from "./WordRow";
 import { getTodayStats, recordResult } from "../Services/statsService";
 import StatsModal from "./StatsModal";
-import type { DocumentData } from "firebase/firestore";
 
 const STORAGE_KEY = "letter-grid-session";
 
@@ -49,7 +48,7 @@ export default function LetterGrid() {
   const [gameOver, setGameOver] = useState(false);
   const [won, setWon] = useState(false);
   const inputRef = useRef(null);
-  const [stats, setStats] = useState<DocumentData | null>(null);
+  const [stats, setStats] = useState<{ plays: number; guessDistribution: { [key: string]: number } } | null>(null);
   const [showStats, setShowStats] = useState(false);
   const [playerGuesses, setPlayerGuesses] = useState(0);
 
@@ -128,7 +127,7 @@ export default function LetterGrid() {
     if (guess === secret.toUpperCase()) {
       await recordResult(guesses.length + 1);
       const stats = await getTodayStats();
-      setStats(stats);          // trigger your stats modal
+      setStats(stats as { plays: number; guessDistribution: { [key: string]: number } });          // trigger your stats modal
       setPlayerGuesses(guesses.length);
       setShowStats(true);
       setWon(true);

@@ -31,7 +31,7 @@ function StatsModal({ stats, playerGuesses }: Readonly<StatsModalProps>) {
 
   const avgGuesses =
     Object.entries(stats.guessDistribution).reduce(
-      (sum, [g, count]) => sum + g * count, 0
+      (sum, [g, count]) => sum + Number.parseInt(g) * count, 0
     ) / stats.plays;
 
   return (
