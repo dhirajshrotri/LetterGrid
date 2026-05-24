@@ -18,6 +18,7 @@ const TimedMode = () => {
   const [timeLeft, setTimeLeft] = useState(300);
   const [gameOver, setGameOver] = useState(false);
   const [message, setMessage] = useState("");
+  const [wordSet, setWordSet] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     // Fetch a random word from the list
@@ -27,6 +28,7 @@ const TimedMode = () => {
         const words = text.split("\n").filter((word) => word.length === 5);
         const randomWord = words[Math.floor(Math.random() * words.length)].toUpperCase();
         setCurrentWord(randomWord);
+        setWordSet(new Set(words.map((w) => w.toUpperCase())));
       });
   }, []);
 
@@ -45,6 +47,11 @@ const TimedMode = () => {
   const handleGuess = (guess: string) => {
     if (gameOver) return;
     const upperGuess = guess.toUpperCase();
+
+    if (!wordSet.has(upperGuess)) {
+      setMessage("We got shakespeare in the house? That's not a valid word.");
+      return;
+    }
     setGuesses((prev) => [...prev, upperGuess]);
     if (upperGuess === currentWord) {
       setGameOver(true);
