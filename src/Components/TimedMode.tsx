@@ -90,7 +90,7 @@ const TimedMode = () => {
                 }}
               />
       <div>
-        {guesses.map((guess, index) => (
+        {guesses.map((guess) => (
           <WordRow word={guess} key={guess} secret={currentWord} isGuessed={true} />
         ))}
       </div>
