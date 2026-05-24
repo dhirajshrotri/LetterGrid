@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import WordRow from "./WordRow";
 import { getTodayStats, recordResult } from "../Services/statsService";
 import StatsModal from "./StatsModal";
+import TimedMode from "./TimedMode";
 
 const STORAGE_KEY = "letter-grid-session";
 
@@ -51,6 +52,8 @@ export default function LetterGrid() {
   const [stats, setStats] = useState<{ plays: number; guessDistribution: { [key: string]: number } } | null>(null);
   const [showStats, setShowStats] = useState(false);
   const [playerGuesses, setPlayerGuesses] = useState(0);
+
+  const [mode, setMode] = useState<"timed" | "classic">("classic");
 
   useEffect(() => {
     fetch("https://raw.githubusercontent.com/charlesreid1/five-letter-words/refs/heads/main/sgb-words.txt")
@@ -177,6 +180,45 @@ export default function LetterGrid() {
         fontFamily: "'Courier New', monospace",
       }}
     >
+      <div>
+        <button
+          onClick={() => setMode("classic")}
+          style={{
+            background: mode === "classic" ? "#538d4e" : "#3a3a3c",
+            color: "#ffffff",
+            border: "none",
+            fontSize: 14,
+            fontWeight: 700,
+            fontFamily: "'Courier New', monospace",
+            letterSpacing: 2,
+            padding: "8px 16px",
+            cursor: "pointer",
+            textTransform: "uppercase",
+            transition: "background 0.2s",
+            marginRight: 8,
+          }}
+        >
+          Classic Mode
+        </button>
+        <button
+          onClick={() => setMode("timed")}
+          style={{
+            background: mode === "timed" ? "#538d4e" : "#3a3a3c",
+            color: "#ffffff",
+            border: "none",
+            fontSize: 14,
+            fontWeight  : 700,
+            fontFamily: "'Courier New', monospace",
+            letterSpacing: 2,
+            padding: "8px 16px",
+            cursor: "pointer",
+            textTransform: "uppercase",
+            transition: "background 0.2s",
+          }}
+        >
+          Timed Mode
+        </button>
+      </div>
       <h1
         style={{
           color: "#ffffff",
@@ -206,7 +248,11 @@ export default function LetterGrid() {
       {error && (
         <p style={{ color: "#ff6b6b", fontSize: 16 }}>{error}</p>
       )}
-
+      {mode === "timed" ? (
+        <TimedMode />
+      ) : (
+        <>
+          
       {!loading && !error && secret && (
         <>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -339,6 +385,8 @@ export default function LetterGrid() {
       {showStats && stats && (
         <StatsModal stats={stats} playerGuesses={playerGuesses} />
       )}
+    </>
+    )}
     </div>
     </>
   )

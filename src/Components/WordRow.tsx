@@ -1,3 +1,5 @@
+import React from "react";
+
 function getWordColors(guess: string, secret:string) {
   const g = guess.toUpperCase().split("");
   const s = secret.toUpperCase().split("");
@@ -32,7 +34,7 @@ interface WordRowProps {
   isGuessed: boolean
 }
 
-export default function WordRow({ word, secret, isGuessed }: Readonly<WordRowProps>) {
+const WordRow = React.memo(({ word, secret, isGuessed }: Readonly<WordRowProps>) => {
  const colors = isGuessed && word ? getWordColors(word, secret) : null;
 
   return (
@@ -72,4 +74,6 @@ export default function WordRow({ word, secret, isGuessed }: Readonly<WordRowPro
       })}
     </div>
   );
-}
+});
+
+export default WordRow;
